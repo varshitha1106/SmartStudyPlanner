@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Smart Study Planner</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<header class="app-header">
+		<div class="brand">
+			<div class="logo" aria-hidden="true">📚</div>
+			<h1>Smart Study Planner</h1>
+		</div>
+		<div class="header-actions">
+			<button id="themeToggle" class="btn btn-ghost" aria-label="Toggle theme" title="Toggle theme">🌙</button>
+			<button id="importDataBtn" class="btn btn-ghost" title="Import your data">Import</button>
+			<button id="exportDataBtn" class="btn btn-secondary" title="Export your data">Export</button>
+			<label class="toggle" title="Enable desktop notifications for reminders">
+				<input type="checkbox" id="notificationsToggle">
+				<span>Notifications</span>
+			</label>
+			<input type="file" id="importFileInput" accept="application/json" class="hidden" />
+		</div>
+	</header>
+
+	<main class="layout">
+		<section class="panel">
+			<h2>Quick Add</h2>
+			<div class="tabs" role="tablist" aria-label="Quick add tabs">
+				<button class="tab active" role="tab" aria-selected="true" aria-controls="taskTab" id="taskTabBtn">Task</button>
+				<button class="tab" role="tab" aria-selected="false" aria-controls="goalTab" id="goalTabBtn">Goal</button>
+			</div>
+			<div class="tab-panels">
+				<form id="taskForm" class="form" role="tabpanel" aria-labelledby="taskTabBtn">
+					<div class="grid-2">
+						<label>Title
+							<input type="text" id="taskTitle" required placeholder="e.g., Read Chapter 4">
+						</label>
+						<label>Course / Subject
+							<input type="text" id="taskSubject" placeholder="e.g., Biology">
+						</label>
+						<label>Due date
+							<input type="date" id="taskDueDate" required>
+						</label>
+						<label>Due time
+							<input type="time" id="taskDueTime" value="18:00">
+						</label>
+						<label>Estimated duration (hrs)
+							<input type="number" id="taskDuration" min="0" step="0.5" value="1">
+						</label>
+						<label>Priority
+							<select id="taskPriority">
+								<option value="low">Low</option>
+								<option value="medium" selected>Medium</option>
+								<option value="high">High</option>
+							</select>
+						</label>
+						<label>Reminder (minutes before)
+							<input type="number" id="taskReminderMinutes" min="0" step="5" value="30">
+						</label>
+						<label>Link to Goal (optional)
+							<select id="taskGoalLink">
+								<option value="">— None —</option>
+							</select>
+						</label>
+					</div>
+					<label>Notes
+						<textarea id="taskNotes" rows="2" placeholder="Add details, resources, or links..."></textarea>
+					</label>
+					<div class="form-actions">
+						<button type="submit" class="btn">Add Task</button>
+						<button type="reset" class="btn btn-ghost">Reset</button>
+					</div>
+				</form>
+
+				<form id="goalForm" class="form hidden" role="tabpanel" aria-labelledby="goalTabBtn">
+					<div class="grid-2">
+						<label>Goal Title
+							<input type="text" id="goalTitle" required placeholder="e.g., Ace Calculus Midterm">
+						</label>
+						<label>Target Date
+							<input type="date" id="goalTargetDate">
+						</label>
+					</div>
+					<label>Description
+						<textarea id="goalDescription" rows="2" placeholder="What does success look like?"></textarea>
+					</label>
+					<div class="form-actions">
+						<button type="submit" class="btn">Add Goal</button>
+						<button type="reset" class="btn btn-ghost">Reset</button>
+					</div>
+				</form>
+			</div>
+		</section>
+
+		<section class="panel">
+			<div class="panel-header">
+				<h2>Tasks</h2>
+				<div class="controls">
+					<input type="search" id="taskSearch" placeholder="Search tasks..." aria-label="Search tasks">
+					<select id="taskFilter">
+						<option value="all">All</option>
+						<option value="pending" selected>Pending</option>
+						<option value="completed">Completed</option>
+						<option value="overdue">Overdue</option>
+						<option value="high">High Priority</option>
+					</select>
+				</div>
+			</div>
+			<ul id="taskList" class="list" aria-live="polite"></ul>
+		</section>
+
+		<section class="panel">
+			<div class="panel-header">
+				<h2>Goals & Progress</h2>
+			</div>
+			<ul id="goalList" class="list" aria-live="polite"></ul>
+		</section>
+
+		<section class="panel">
+			<div class="panel-header">
+				<h2>Focus Timer</h2>
+			</div>
+			<div class="form" id="focusForm">
+				<div class="grid-2">
+					<label>Task to focus (optional)
+						<select id="focusTaskSelect">
+							<option value="">— None —</option>
+						</select>
+					</label>
+					<label>Work minutes
+						<input type="number" id="focusWorkMin" min="5" max="120" value="25">
+					</label>
+					<label>Break minutes
+						<input type="number" id="focusBreakMin" min="1" max="60" value="5">
+					</label>
+				</div>
+				<div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
+					<div id="focusTime" class="item-title" style="font-size:28px; min-width:110px;">25:00</div>
+					<div class="item-actions">
+						<button id="focusStartBtn" class="btn">Start</button>
+						<button id="focusPauseBtn" class="btn btn-ghost">Pause</button>
+						<button id="focusResetBtn" class="btn btn-ghost">Reset</button>
+					</div>
+				</div>
+				<div class="item-sub" id="focusPhaseLabel">Ready to focus</div>
+			</div>
+			<div style="margin-top:12px;">
+				<div class="goal-header">
+					<div class="item-title">Today's Focus</div>
+					<div class="item-sub" id="focusStreakLabel">Streak: 0 days</div>
+				</div>
+				<div class="item-sub" id="focusStats">0 sessions · 0 min</div>
+			</div>
+		</section>
+
+		<section class="panel">
+			<div class="panel-header">
+				<h2>Timeline (Next 7 Days)</h2>
+				<div class="controls">
+					<button id="todayBtn" class="btn btn-ghost">Today</button>
+					<button id="weekBtn" class="btn btn-ghost">This Week</button>
+				</div>
+			</div>
+			<div id="timeline" class="timeline" aria-live="polite"></div>
+		</section>
+	</main>
+
+	<footer class="app-footer">
+		<p>Made with ♥ for better learning. Your data stays in your browser.</p>
+	</footer>
+
+	<dialog id="editTaskDialog">
+		<form method="dialog" id="editTaskForm" class="form">
+			<h3>Edit Task</h3>
+			<input type="hidden" id="editTaskId">
+			<div class="grid-2">
+				<label>Title
+					<input type="text" id="editTaskTitle" required>
+				</label>
+				<label>Course / Subject
+					<input type="text" id="editTaskSubject">
+				</label>
+				<label>Due date
+					<input type="date" id="editTaskDueDate" required>
+				</label>
+				<label>Due time
+					<input type="time" id="editTaskDueTime">
+				</label>
+				<label>Estimated duration (hrs)
+					<input type="number" id="editTaskDuration" min="0" step="0.5">
+				</label>
+				<label>Priority
+					<select id="editTaskPriority">
+						<option value="low">Low</option>
+						<option value="medium">Medium</option>
+						<option value="high">High</option>
+					</select>
+				</label>
+				<label>Reminder (minutes before)
+					<input type="number" id="editTaskReminderMinutes" min="0" step="5">
+				</label>
+				<label>Link to Goal
+					<select id="editTaskGoalLink">
+						<option value="">— None —</option>
+					</select>
+				</label>
+			</div>
+			<label>Notes
+				<textarea id="editTaskNotes" rows="2"></textarea>
+			</label>
+			<div class="form-actions">
+				<button value="cancel" class="btn btn-ghost">Cancel</button>
+				<button id="saveTaskEditBtn" value="default" class="btn">Save</button>
+			</div>
+		</form>
+	</dialog>
+
+	<script src="script.js" defer></script>
+</body>
+</html> 
